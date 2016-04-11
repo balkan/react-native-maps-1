@@ -9,6 +9,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.util.Log;
 
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.ReadableMap;
@@ -49,7 +50,6 @@ public class AirMapView
     private boolean showUserLocation = false;
     private boolean isMonitoringRegion = false;
     private boolean isTouchDown = false;
-    private boolean clusterMarkers = false;
 
     private ClusterManager<AirMapMarker> mClusterManager;
 
@@ -109,6 +109,8 @@ public class AirMapView
 
     @Override
     public void onMapReady(final GoogleMap map) {
+        Log.d("AirMapView", "onMapReady");
+
         this.map = map;
         this.map.setInfoWindowAdapter(this);
         this.map.setOnMarkerDragListener(this);
@@ -119,23 +121,9 @@ public class AirMapView
 
         final AirMapView view = this;
 
-        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                WritableMap event;
-
-                event = makeClickEventData(marker.getPosition());
-                event.putString("action", "marker-press");
-                manager.pushEvent(view, "onMarkerPress", event);
-
-                event = makeClickEventData(marker.getPosition());
-                event.putString("action", "marker-press");
-                manager.pushEvent(markerMap.get(marker), "onPress", event);
-
-                return false; // returning false opens the callout window, if possible
-            }
-        });
-
+        map.setOnMarkerClickListener(this.mClusterManager);
+        map.setOnCameraChangeListener(this.mClusterManager);
+        // TODO: this here needs to change too  17.04.16
         map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
@@ -172,16 +160,6 @@ public class AirMapView
                 WritableMap event = makeClickEventData(point);
                 event.putString("action", "long-press");
                 manager.pushEvent(view, "onLongPress", makeClickEventData(point));
-            }
-        });
-
-        map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-            @Override
-            public void onCameraChange(CameraPosition position) {
-                LatLngBounds bounds = map.getProjection().getVisibleRegion().latLngBounds;
-                lastBoundsEmitted = bounds;
-                eventDispatcher.dispatchEvent(new RegionChangeEvent(getId(), bounds, isTouchDown));
-                view.stopMonitoringRegion();
             }
         });
 
@@ -238,16 +216,11 @@ public class AirMapView
         map.setMyLocationEnabled(showUserLocation);
     }
 
-    public void setClusterMarkers(boolean clusterMarkers) {
-        this.clusterMarkers = clusterMarkers;
-    }
-
     public void addFeature(View child, int index) {
         // Our desired API is to pass up annotations/overlays as children to the mapview component.
         // This is where we intercept them and do the appropriate underlying mapview action.
         if (child instanceof AirMapMarker) {
             AirMapMarker annotation = (AirMapMarker) child;
-            annotation.addToMap(map);
             features.add(index, annotation);
             Marker marker = (Marker)annotation.getFeature();
             markerMap.put(marker, annotation);
@@ -288,7 +261,7 @@ public class AirMapView
         feature.removeFromMap(map);
 
         if (feature instanceof AirMapMarker) {
-            markerMap.remove(feature.getFeature());
+            markerMap.remove(feature.getFeature());  // TODO: maybe remove this line as well
             mClusterManager.removeItem((AirMapMarker)feature.getFeature());
         } else if (feature instanceof AirMapPolyline) {
             polylineMap.remove(feature.getFeature());
@@ -371,12 +344,14 @@ public class AirMapView
     @Override
     public View getInfoWindow(Marker marker) {
         AirMapMarker markerView = markerMap.get(marker);
+        if (markerView == null) return null;
         return markerView.getCallout();
     }
 
     @Override
     public View getInfoContents(Marker marker) {
         AirMapMarker markerView = markerMap.get(marker);
+        if (markerView == null) return null;
         return markerView.getInfoContents();
     }
 
