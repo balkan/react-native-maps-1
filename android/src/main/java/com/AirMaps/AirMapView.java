@@ -262,7 +262,7 @@ public class AirMapView
 
         if (feature instanceof AirMapMarker) {
             markerMap.remove(feature.getFeature());  // TODO: maybe remove this line as well
-            mClusterManager.removeItem((AirMapMarker)feature.getFeature());
+            mClusterManager.removeItem((AirMapMarker)feature.getFeature()); // was removed
         } else if (feature instanceof AirMapPolyline) {
             polylineMap.remove(feature.getFeature());
         } else if (feature instanceof AirMapPolygon) {

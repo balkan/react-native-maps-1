@@ -245,6 +245,7 @@ public class AirMapMarker extends AirMapFeature implements ClusterItem{
 
     @Override
     public void removeFromMap(GoogleMap map) {
+        if (marker == null) return;
         marker.remove();
         marker = null;
     }
