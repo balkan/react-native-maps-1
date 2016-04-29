@@ -51,8 +51,6 @@ public class AirMapView
     private boolean isMonitoringRegion = false;
     private boolean isTouchDown = false;
 
-    private ClusterManager<AirMapMarker> mClusterManager;
-
     private ArrayList<AirMapFeature> features = new ArrayList<>();
     private HashMap<Marker, AirMapMarker> markerMap = new HashMap<>();
     private HashMap<Polyline, AirMapPolyline> polylineMap = new HashMap<>();
@@ -115,14 +113,38 @@ public class AirMapView
         this.map.setInfoWindowAdapter(this);
         this.map.setOnMarkerDragListener(this);
 
-        this.mClusterManager = new ClusterManager<AirMapMarker>(this.getContext(), map);
-
         manager.pushEvent(this, "onMapReady", new WritableNativeMap());
 
         final AirMapView view = this;
 
-        map.setOnMarkerClickListener(this.mClusterManager);
-        map.setOnCameraChangeListener(this.mClusterManager);
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                WritableMap event;
+
+                event = makeClickEventData(marker.getPosition());
+                event.putString("action", "marker-press");
+                manager.pushEvent(view, "onMarkerPress", event);
+
+                event = makeClickEventData(marker.getPosition());
+                event.putString("action", "marker-press");
+                manager.pushEvent(markerMap.get(marker), "onPress", event);
+
+                return false; // returning false opens the callout window, if possible
+            }
+        });
+
+        map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(CameraPosition position) {
+                LatLngBounds bounds = map.getProjection().getVisibleRegion().latLngBounds;
+                lastBoundsEmitted = bounds;
+                eventDispatcher.dispatchEvent(new RegionChangeEvent(getId(), bounds, isTouchDown));
+                view.stopMonitoringRegion();
+            }
+        });
+
+
         // TODO: this here needs to change too  17.04.16
         map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
@@ -221,10 +243,10 @@ public class AirMapView
         // This is where we intercept them and do the appropriate underlying mapview action.
         if (child instanceof AirMapMarker) {
             AirMapMarker annotation = (AirMapMarker) child;
+            annotation.addToMap(map);
             features.add(index, annotation);
             Marker marker = (Marker)annotation.getFeature();
             markerMap.put(marker, annotation);
-            mClusterManager.addItem(annotation);
         } else if (child instanceof AirMapPolyline) {
             AirMapPolyline polylineView = (AirMapPolyline) child;
             polylineView.addToMap(map);
@@ -261,8 +283,7 @@ public class AirMapView
         feature.removeFromMap(map);
 
         if (feature instanceof AirMapMarker) {
-            markerMap.remove(feature.getFeature());  // TODO: maybe remove this line as well
-            mClusterManager.removeItem((AirMapMarker)feature.getFeature());
+            markerMap.remove(feature.getFeature());
         } else if (feature instanceof AirMapPolyline) {
             polylineMap.remove(feature.getFeature());
         } else if (feature instanceof AirMapPolygon) {
@@ -344,14 +365,12 @@ public class AirMapView
     @Override
     public View getInfoWindow(Marker marker) {
         AirMapMarker markerView = markerMap.get(marker);
-        if (markerView == null) return null;
         return markerView.getCallout();
     }
 
     @Override
     public View getInfoContents(Marker marker) {
         AirMapMarker markerView = markerMap.get(marker);
-        if (markerView == null) return null;
         return markerView.getInfoContents();
     }
 
