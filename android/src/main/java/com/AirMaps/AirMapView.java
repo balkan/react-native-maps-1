@@ -31,11 +31,13 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.maps.android.clustering.ClusterItem;
-import com.google.maps.android.clustering.ClusterManager;
+
+import com.google.maps.android.heatmaps.HeatmapTileProvider;
+import com.google.android.gms.maps.model.TileOverlay;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
 
 public class AirMapView
         extends MapView
@@ -61,8 +63,11 @@ public class AirMapView
     private GestureDetectorCompat gestureDetector;
     private AirMapManager manager;
 
-    final EventDispatcher eventDispatcher;
+    private HeatmapTileProvider heatmapProvider;
+    private TileOverlay tileOverlay;
 
+
+    final EventDispatcher eventDispatcher;
 
 
     public AirMapView(ThemedReactContext context, AirMapManager manager) {
@@ -112,6 +117,10 @@ public class AirMapView
         this.map = map;
         this.map.setInfoWindowAdapter(this);
         this.map.setOnMarkerDragListener(this);
+
+        // this.heatmapProvider = new HeatmapTileProvider.Builder()
+        //     .data()
+        //     .build()
 
         manager.pushEvent(this, "onMapReady", new WritableNativeMap());
 
@@ -241,6 +250,10 @@ public class AirMapView
     public void addFeature(View child, int index) {
         // Our desired API is to pass up annotations/overlays as children to the mapview component.
         // This is where we intercept them and do the appropriate underlying mapview action.
+        Log.d("AirMapView", "XXX: add feature here and now ");
+
+        Log.d("AirMapView", Log.getStackTraceString(new Exception()));
+
         if (child instanceof AirMapMarker) {
             AirMapMarker annotation = (AirMapMarker) child;
             annotation.addToMap(map);
