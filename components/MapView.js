@@ -329,6 +329,14 @@ var MapView = React.createClass({
     this._runCommand('animateToCoordinate', [latLng, duration || 500]);
   },
 
+  reloadHeatmap: function(checkinList) {
+    this._runCommand('reloadHeatmap', [checkinList])
+  },
+
+  toggleHeatmap: function() {
+    this._runCommand('toggleHeatmap', [])
+  },
+
   fitToElements: function(animated) {
     this._runCommand('fitToElements', [animated]);
   },

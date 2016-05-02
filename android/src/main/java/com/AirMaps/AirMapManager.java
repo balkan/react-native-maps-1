@@ -20,6 +20,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 
 import java.util.Map;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -31,6 +32,8 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
     public static final int ANIMATE_TO_REGION = 1;
     public static final int ANIMATE_TO_COORDINATE = 2;
     public static final int FIT_TO_ELEMENTS = 3;
+    public static final int RELOAD_HEATMAP = 4;
+    public static final int TOGGLE_HEATMAP = 5;
 
     private Map<String, Integer> MAP_TYPES = MapBuilder.of(
         "standard", GoogleMap.MAP_TYPE_NORMAL,
@@ -148,6 +151,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         Double latDelta;
         ReadableMap region;
 
+
         switch (commandId) {
             case ANIMATE_TO_REGION:
                 region = args.getMap(0);
@@ -174,6 +178,14 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
             case FIT_TO_ELEMENTS:
                 view.fitToElements(args.getBoolean(0));
                 break;
+
+            case RELOAD_HEATMAP:
+                view.reloadHeatmap();
+                break;
+
+            case TOGGLE_HEATMAP:
+                view.toggleHeatmap();
+                break;
         }
     }
 
@@ -192,7 +204,8 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         map.putAll(MapBuilder.of(
                 "onMarkerDragStart", MapBuilder.of("registrationName", "onMarkerDragStart"),
                 "onMarkerDrag", MapBuilder.of("registrationName", "onMarkerDrag"),
-                "onMarkerDragEnd", MapBuilder.of("registrationName", "onMarkerDragEnd")
+                "onMarkerDragEnd", MapBuilder.of("registrationName", "onMarkerDragEnd"),
+                "onCameraChange", MapBuilder.of("registrationName", "onCameraChange")
         ));
 
         return map;
@@ -203,7 +216,9 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         return MapBuilder.of(
             "animateToRegion", ANIMATE_TO_REGION,
             "animateToCoordinate", ANIMATE_TO_COORDINATE,
-            "fitToElements", FIT_TO_ELEMENTS
+            "fitToElements", FIT_TO_ELEMENTS,
+            "reloadHeatmap", RELOAD_HEATMAP,
+            "toggleHeatmap", TOGGLE_HEATMAP
         );
     }
 

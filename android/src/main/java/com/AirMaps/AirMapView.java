@@ -24,6 +24,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
@@ -36,6 +37,7 @@ import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.android.gms.maps.model.TileOverlay;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 
 
@@ -52,8 +54,10 @@ public class AirMapView
     private boolean showUserLocation = false;
     private boolean isMonitoringRegion = false;
     private boolean isTouchDown = false;
+    private boolean isShowingHeatmap = true;
 
     private ArrayList<AirMapFeature> features = new ArrayList<>();
+    private List<LatLng> focalPoints = new ArrayList<>();
     private HashMap<Marker, AirMapMarker> markerMap = new HashMap<>();
     private HashMap<Polyline, AirMapPolyline> polylineMap = new HashMap<>();
     private HashMap<Polygon, AirMapPolygon> polygonMap = new HashMap<>();
@@ -63,9 +67,8 @@ public class AirMapView
     private GestureDetectorCompat gestureDetector;
     private AirMapManager manager;
 
-    private HeatmapTileProvider heatmapProvider;
-    private TileOverlay tileOverlay;
-
+    private HeatmapTileProvider mProvider;
+    private TileOverlay mOverlay;
 
     final EventDispatcher eventDispatcher;
 
@@ -118,10 +121,6 @@ public class AirMapView
         this.map.setInfoWindowAdapter(this);
         this.map.setOnMarkerDragListener(this);
 
-        // this.heatmapProvider = new HeatmapTileProvider.Builder()
-        //     .data()
-        //     .build()
-
         manager.pushEvent(this, "onMapReady", new WritableNativeMap());
 
         final AirMapView view = this;
@@ -146,13 +145,19 @@ public class AirMapView
         map.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
             @Override
             public void onCameraChange(CameraPosition position) {
+                Log.d("AirMapView", "on camera change ");
+
+                WritableMap event;
+
                 LatLngBounds bounds = map.getProjection().getVisibleRegion().latLngBounds;
+                event = makeCameraPositionEventData(bounds);
                 lastBoundsEmitted = bounds;
                 eventDispatcher.dispatchEvent(new RegionChangeEvent(getId(), bounds, isTouchDown));
                 view.stopMonitoringRegion();
+
+                manager.pushEvent(view, "onCameraChange", event);
             }
         });
-
 
         // TODO: this here needs to change too  17.04.16
         map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
@@ -250,13 +255,19 @@ public class AirMapView
     public void addFeature(View child, int index) {
         // Our desired API is to pass up annotations/overlays as children to the mapview component.
         // This is where we intercept them and do the appropriate underlying mapview action.
-        Log.d("AirMapView", "XXX: add feature here and now ");
+        Log.d("AirMapView", "XXX: adding feature ");
 
-        Log.d("AirMapView", Log.getStackTraceString(new Exception()));
+        // Log.d("AirMapView", Log.getStackTraceString(new Exception()));
 
         if (child instanceof AirMapMarker) {
             AirMapMarker annotation = (AirMapMarker) child;
-            annotation.addToMap(map);
+
+            if (!this.isShowingHeatmap) {
+                // do not add marker to map if we are showing heatmap
+                annotation.addToMap(map);
+            }
+
+            focalPoints.add(annotation.getPosition());
             features.add(index, annotation);
             Marker marker = (Marker)annotation.getFeature();
             markerMap.put(marker, annotation);
@@ -287,6 +298,10 @@ public class AirMapView
         return features.size();
     }
 
+    public int getFocalPointCount() {
+        return focalPoints.size();
+    }
+
     public View getFeatureAt(int index) {
         return features.get(index);
     }
@@ -304,6 +319,35 @@ public class AirMapView
         } else if (feature instanceof AirMapCircle) {
             circleMap.remove(feature.getFeature());
         }
+    }
+
+    public WritableMap makeCameraPositionEventData(LatLngBounds bounds) {
+        // takes bound and returns 3 positions
+        WritableMap event = new WritableNativeMap();
+
+        //
+        WritableMap center = new WritableNativeMap();
+        WritableMap northeast = new WritableNativeMap();
+        WritableMap southwest = new WritableNativeMap();
+
+        //
+        LatLng boundCenter = bounds.getCenter();
+        LatLng boundNortheast = bounds.northeast;
+        LatLng boundSouthwest = bounds.southwest;
+        // put center
+        center.putDouble("latitude", boundCenter.latitude);
+        center.putDouble("longitude", boundCenter.longitude);
+        event.putMap("center", center);
+        // northeast
+        northeast.putDouble("latitude", boundNortheast.latitude);
+        northeast.putDouble("longitude", boundNortheast.longitude);
+        event.putMap("northeast", northeast);
+        // southwest
+        southwest.putDouble("latitude", boundSouthwest.latitude);
+        southwest.putDouble("longitude", boundSouthwest.longitude);
+        event.putMap("southwest", southwest);
+
+        return event;
     }
 
     public WritableMap makeClickEventData(LatLng point) {
@@ -469,4 +513,53 @@ public class AirMapView
         event = makeClickEventData(marker.getPosition());
         manager.pushEvent(markerView, "onDragEnd", event);
     }
+
+    public void reloadHeatmap() {
+        Log.d("AirMapView", "reload collection event is invoked");
+        Log.d("AirMapView", "feature/focalpoint count " +
+              this.getFeatureCount() + " " + this.getFocalPointCount());
+
+        // make sure there are some focal points to build heatmap with
+        if (this.getFocalPointCount() > 0) {
+            this.mProvider = new HeatmapTileProvider.Builder()
+                                    .data(this.focalPoints)
+                                    .build();
+            this.mOverlay = this.map.addTileOverlay(
+                new TileOverlayOptions().tileProvider(this.mProvider));
+        } else {
+            Log.d("AirMapView", "no focal points, skip building heatmap");
+        }
+    }
+
+    public void showMarkers() {
+        Log.d("AirMapView", "show markers are  instigated");
+
+        for (AirMapFeature feature : this.features) {
+            if (feature instanceof AirMapMarker) {
+                feature.addToMap(this.map);
+            }
+        }
+    }
+
+    public void hideMarkers() {
+        Log.d("AirMapView", "hiding all markers");
+
+        for (AirMapFeature feature : this.features) {
+            if (feature instanceof AirMapMarker) {
+                feature.removeFromMap(this.map);
+            }
+        }
+    }
+
+    public void toggleHeatmap() {
+        if (this.isShowingHeatmap) {
+            this.showMarkers();
+            this.isShowingHeatmap = false;
+        } else {
+            this.hideMarkers();
+            this.reloadHeatmap();
+            this.isShowingHeatmap = true;
+        }
+    }
+
 }
