@@ -68,7 +68,7 @@ public class AirMapView
     private AirMapManager manager;
 
     private HeatmapTileProvider mProvider;
-    private TileOverlay mOverlay;
+    private TileOverlay mOverlay = null;
 
     final EventDispatcher eventDispatcher;
 
@@ -521,6 +521,10 @@ public class AirMapView
 
         // make sure there are some focal points to build heatmap with
         if (this.getFocalPointCount() > 0) {
+            if (this.mOverlay != null)
+                this.mOverlay.remove();
+            Log.d("AirMapView", "focal point count" + this.getFocalPointCount())
+
             this.mProvider = new HeatmapTileProvider.Builder()
                                     .data(this.focalPoints)
                                     .build();
