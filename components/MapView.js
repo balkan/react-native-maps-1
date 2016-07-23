@@ -10,6 +10,7 @@ import {
   Animated,
   requireNativeComponent,
   NativeModules,
+  findNodeHandle,
 } from 'react-native'
 
 var MapMarker = require('./MapMarker');
@@ -341,7 +342,7 @@ var MapView = React.createClass({
   },
 
   _getHandle: function() {
-    return React.findNodeHandle(this.refs.map);
+    return findNodeHandle(this.refs.map);
   },
 
   _runCommand: function (name, args) {

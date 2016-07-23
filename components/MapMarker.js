@@ -9,6 +9,7 @@ import {
   Platform,
   NativeModules,
   Animated,
+  findNodeHandle,
 } from 'react-native';
 
 var resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
@@ -210,7 +211,7 @@ var MapMarker = React.createClass({
   },
 
   _getHandle: function() {
-    return React.findNodeHandle(this.refs.marker);
+    return findNodeHandle(this.refs.marker);
   },
 
   _runCommand: function (name, args) {
