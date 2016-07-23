@@ -523,7 +523,8 @@ public class AirMapView
         if (this.getFocalPointCount() > 0) {
             if (this.mOverlay != null)
                 this.mOverlay.remove();
-            Log.d("AirMapView", "focal point count" + this.getFocalPointCount())
+
+            Log.d("AirMapView", "focal point count" + this.getFocalPointCount());
 
             this.mProvider = new HeatmapTileProvider.Builder()
                                     .data(this.focalPoints)
