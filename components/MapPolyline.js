@@ -1,12 +1,13 @@
+'use strict'
 
-var React = require('react');
-var {
+import React, {PropTypes} from 'react'
+import {
   View,
   NativeMethodsMixin,
   requireNativeComponent,
   StyleSheet,
-  PropTypes,
-} = React;
+} from 'react-native';
+
 
 var MapPolyline = React.createClass({
   mixins: [NativeMethodsMixin],

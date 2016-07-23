@@ -1,12 +1,13 @@
+'use strict'
 
-var React = require('react');
-var {
+import React, {Component, PropTypes} from 'react'
+import {
   View,
   NativeMethodsMixin,
   requireNativeComponent,
   StyleSheet,
-  PropTypes,
-} = React;
+} from 'react-native';
+
 
 var MapCircle = React.createClass({
   mixins: [NativeMethodsMixin],

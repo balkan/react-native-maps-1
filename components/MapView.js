@@ -1,7 +1,7 @@
 'use strict';
 
-var React = require('react');
-var {
+import React, {Component, PropTypes} from 'react';
+import {
   EdgeInsetsPropType,
   NativeMethodsMixin,
   Platform,
@@ -10,8 +10,7 @@ var {
   Animated,
   requireNativeComponent,
   NativeModules,
-  PropTypes,
-} = React;
+} from 'react-native'
 
 var MapMarker = require('./MapMarker');
 var MapPolyline = require('./MapPolyline');

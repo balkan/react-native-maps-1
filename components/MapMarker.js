@@ -1,16 +1,15 @@
 'use strict';
 
-var React = require('react');
-var {
+import React, {Component, PropTypes} from 'react';
+import {
   View,
   NativeMethodsMixin,
   requireNativeComponent,
   StyleSheet,
-  PropTypes,
   Platform,
   NativeModules,
   Animated,
-} = React;
+} from 'react-native';
 
 var resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
 
