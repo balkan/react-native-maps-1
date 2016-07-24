@@ -576,6 +576,6 @@ public class AirMapView
 
     public void setHeatmapStatus(boolean flag) {
         Log.d("AirMapView", "YYY: Set heatmap status ");
-        this.toggleHeatmap(flag)
+        this.toggleHeatmap(flag);
     }
 }
