@@ -54,7 +54,7 @@ public class AirMapView
     private boolean showUserLocation = false;
     private boolean isMonitoringRegion = false;
     private boolean isTouchDown = false;
-    private boolean isShowingHeatmap = true;
+    private boolean isShowingHeatmap = false;
 
     private ArrayList<AirMapFeature> features = new ArrayList<>();
     private List<LatLng> focalPoints = new ArrayList<>();
@@ -186,7 +186,7 @@ public class AirMapView
             public void onMapClick(LatLng point) {
                 WritableMap event = makeClickEventData(point);
                 event.putString("action", "press");
-                manager.pushEvent(view, "onPress", event);
+                manager.pushEvent(view, "onPress", makeClickEventData(point));
             }
         });
 
@@ -514,6 +514,11 @@ public class AirMapView
         manager.pushEvent(markerView, "onDragEnd", event);
     }
 
+    public void removeHeatmap() {
+        if (this.mOverlay != null)
+            this.mOverlay.remove();
+    }
+
     public void reloadHeatmap() {
         Log.d("AirMapView", "reload collection event is invoked");
         Log.d("AirMapView", "feature/focalpoint count " +
@@ -521,16 +526,17 @@ public class AirMapView
 
         // make sure there are some focal points to build heatmap with
         if (this.getFocalPointCount() > 0) {
-            if (this.mOverlay != null)
-                this.mOverlay.remove();
+            this.removeHeatmap();
 
             Log.d("AirMapView", "focal point count" + this.getFocalPointCount());
-
-            this.mProvider = new HeatmapTileProvider.Builder()
-                                    .data(this.focalPoints)
-                                    .build();
-            this.mOverlay = this.map.addTileOverlay(
-                new TileOverlayOptions().tileProvider(this.mProvider));
+            // add heatmap only if we are showing heatmap
+            if (this.isShowingHeatmap) {
+                this.mProvider = new HeatmapTileProvider.Builder()
+                                        .data(this.focalPoints)
+                                        .build();
+                this.mOverlay = this.map.addTileOverlay(
+                    new TileOverlayOptions().tileProvider(this.mProvider));
+            }
         } else {
             Log.d("AirMapView", "no focal points, skip building heatmap");
         }
@@ -556,15 +562,20 @@ public class AirMapView
         }
     }
 
-    public void toggleHeatmap() {
-        if (this.isShowingHeatmap) {
-            this.showMarkers();
-            this.isShowingHeatmap = false;
-        } else {
+    public void toggleHeatmap(boolean flag) {
+        this.isShowingHeatmap = flag;
+
+        if (flag) {
             this.hideMarkers();
             this.reloadHeatmap();
-            this.isShowingHeatmap = true;
+        } else {
+            this.showMarkers();
+            this.removeHeatmap();
         }
     }
 
+    public void setHeatmapStatus(boolean flag) {
+        Log.d("AirMapView", "YYY: Set heatmap status ");
+        this.toggleHeatmap(flag)
+    }
 }

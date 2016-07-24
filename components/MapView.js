@@ -91,6 +91,12 @@ var MapView = React.createClass({
     clusterMarkers: PropTypes.bool,
 
     /**
+     * If `true` markers displayed as heatmap
+     *
+     */
+    heatmap: PropTypes.bool,
+
+    /**
      * A Boolean indicating whether the map shows scale information.
      * Default value is `false`
      *
@@ -333,8 +339,8 @@ var MapView = React.createClass({
     this._runCommand('reloadHeatmap', [checkinList])
   },
 
-  toggleHeatmap: function() {
-    this._runCommand('toggleHeatmap', [])
+  toggleHeatmap: function(flag) {
+    this._runCommand('toggleHeatmap', [flag])
   },
 
   fitToElements: function(animated) {

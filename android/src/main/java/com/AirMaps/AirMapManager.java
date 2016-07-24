@@ -137,6 +137,11 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
         view.map.getUiSettings().setZoomGesturesEnabled(zoomEnabled);
     }
 
+    @ReactProp(name="heatmap", defaultBoolean = false)
+    public void setHeatmap(AirMapView view, boolean heatmapEnabled) {
+        view.setHeatmapStatus(heatmapEnabled);
+    }
+
     @ReactProp(name="rotateEnabled", defaultBoolean = false)
     public void setRotateEnabled(AirMapView view, boolean rotateEnabled) {
         view.map.getUiSettings().setRotateGesturesEnabled(rotateEnabled);
@@ -184,7 +189,7 @@ public class AirMapManager extends ViewGroupManager<AirMapView> {
                 break;
 
             case TOGGLE_HEATMAP:
-                view.toggleHeatmap();
+                view.toggleHeatmap(args.getBoolean(0));
                 break;
         }
     }
