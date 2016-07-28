@@ -40,6 +40,7 @@ public class AirMapMarker extends AirMapFeature implements ClusterItem{
 
     private MarkerOptions markerOptions;
     private Marker marker;
+    private boolean userMarker;
     private int width;
     private int height;
 
@@ -136,6 +137,11 @@ public class AirMapMarker extends AirMapFeature implements ClusterItem{
         if (marker != null) {
             marker.setSnippet(snippet);
         }
+        update();
+    }
+
+    public void setUserMarker(boolean userMarker) {
+        this.userMarker = userMarker;
         update();
     }
 
@@ -266,8 +272,11 @@ public class AirMapMarker extends AirMapFeature implements ClusterItem{
 
     private MarkerOptions createMarkerOptions() {
         MarkerOptions options = new MarkerOptions().position(position);
-        if (anchorIsSet) options.anchor(anchorX, anchorY);
-        if (calloutAnchorIsSet) options.infoWindowAnchor(calloutAnchorX, calloutAnchorY);
+        if (anchorIsSet)
+            options.anchor(anchorX, anchorY);
+        if (calloutAnchorIsSet)
+            options.infoWindowAnchor(calloutAnchorX, calloutAnchorY);
+
         options.title(title);
         options.snippet(snippet);
         options.rotation(rotation);

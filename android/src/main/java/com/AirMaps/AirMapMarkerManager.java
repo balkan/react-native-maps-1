@@ -55,6 +55,12 @@ public class AirMapMarkerManager extends ViewGroupManager<AirMapMarker> {
         view.setSnippet(description);
     }
 
+    @ReactProp(name = "userMarker")
+    public void setDescription(AirMapMarker view, boolean userMarker) {
+        view.setUserMarker(userMarker);
+    }
+
+
     // NOTE(lmr):
     // android uses normalized coordinate systems for this, and is provided through the
     // `anchor` property  and `calloutAnchor` instead.  Perhaps some work could be done

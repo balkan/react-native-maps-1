@@ -30,6 +30,7 @@ var MapMarker = React.createClass({
     // TODO(lmr): get rid of these?
     identifier: PropTypes.string,
     reuseIdentifier: PropTypes.string,
+    userMarker: PropTypes.bool,
 
     /**
      * The title of the marker. This is only used if the <Marker /> component has no children that
