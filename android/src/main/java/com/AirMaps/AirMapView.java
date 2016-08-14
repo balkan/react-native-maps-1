@@ -267,7 +267,10 @@ public class AirMapView
                 annotation.addToMap(map);
             }
 
-            focalPoints.add(annotation.getPosition());
+            if (!annotation.isUserMarker()) {
+                focalPoints.add(annotation.getPosition());
+            }
+
             features.add(index, annotation);
             Marker marker = (Marker)annotation.getFeature();
             markerMap.put(marker, annotation);

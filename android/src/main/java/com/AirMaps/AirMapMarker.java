@@ -36,7 +36,7 @@ import com.google.maps.android.clustering.ClusterItem;
 
 import javax.annotation.Nullable;
 
-public class AirMapMarker extends AirMapFeature implements ClusterItem{
+public class AirMapMarker extends AirMapFeature implements ClusterItem {
 
     private MarkerOptions markerOptions;
     private Marker marker;
@@ -222,6 +222,10 @@ public class AirMapMarker extends AirMapFeature implements ClusterItem{
             markerOptions = createMarkerOptions();
         }
         return markerOptions;
+    }
+
+    public boolean isUserMarker() {
+        return userMarker;
     }
 
     @Override

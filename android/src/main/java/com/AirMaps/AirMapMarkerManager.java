@@ -56,7 +56,7 @@ public class AirMapMarkerManager extends ViewGroupManager<AirMapMarker> {
     }
 
     @ReactProp(name = "userMarker")
-    public void setDescription(AirMapMarker view, boolean userMarker) {
+    public void setUserMarker(AirMapMarker view, boolean userMarker) {
         view.setUserMarker(userMarker);
     }
 
