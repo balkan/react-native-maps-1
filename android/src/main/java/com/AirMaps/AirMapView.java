@@ -57,7 +57,6 @@ public class AirMapView
     private boolean isShowingHeatmap = false;
 
     private ArrayList<AirMapFeature> features = new ArrayList<>();
-    private List<LatLng> focalPoints = new ArrayList<>();
     private HashMap<Marker, AirMapMarker> markerMap = new HashMap<>();
     private HashMap<Polyline, AirMapPolyline> polylineMap = new HashMap<>();
     private HashMap<Polygon, AirMapPolygon> polygonMap = new HashMap<>();
@@ -267,10 +266,6 @@ public class AirMapView
                 annotation.addToMap(map);
             }
 
-            if (!annotation.isUserMarker()) {
-                focalPoints.add(annotation.getPosition());
-            }
-
             features.add(index, annotation);
             Marker marker = (Marker)annotation.getFeature();
             markerMap.put(marker, annotation);
@@ -299,10 +294,6 @@ public class AirMapView
 
     public int getFeatureCount() {
         return features.size();
-    }
-
-    public int getFocalPointCount() {
-        return focalPoints.size();
     }
 
     public View getFeatureAt(int index) {
@@ -524,24 +515,31 @@ public class AirMapView
 
     public void reloadHeatmap() {
         Log.d("AirMapView", "reload collection event is invoked");
-        Log.d("AirMapView", "feature/focalpoint count " +
-              this.getFeatureCount() + " " + this.getFocalPointCount());
+        Log.d("AirMapView", "feature count " + this.getFeatureCount());
 
         // make sure there are some focal points to build heatmap with
-        if (this.getFocalPointCount() > 0) {
+        if (this.getFeatureCount() > 0) {
             this.removeHeatmap();
 
-            Log.d("AirMapView", "focal point count" + this.getFocalPointCount());
+            Log.d("AirMapView", "feature  count" + this.getFeatureCount());
             // add heatmap only if we are showing heatmap
             if (this.isShowingHeatmap) {
+                List<LatLng> focalPoints = new ArrayList<>();
+                for (AirMapFeature feature : features) {
+                    if (feature instanceof AirMapMarker) {
+                        AirMapMarker annotation = (AirMapMarker) feature;
+                        focalPoints.add(annotation.getPosition());
+                    }
+                }
+
                 this.mProvider = new HeatmapTileProvider.Builder()
-                                        .data(this.focalPoints)
+                                        .data(focalPoints)
                                         .build();
                 this.mOverlay = this.map.addTileOverlay(
                     new TileOverlayOptions().tileProvider(this.mProvider));
             }
         } else {
-            Log.d("AirMapView", "no focal points, skip building heatmap");
+            Log.d("AirMapView", "no features points, skip building heatmap");
         }
     }
 
